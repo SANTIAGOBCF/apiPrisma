@@ -5,21 +5,15 @@ import cors from "cors";
 
 const app = express();
 
-var allowedOrigins = ['http://localhost:4200',
-                      'http://yourapp.com'];
-app.use(cors({
-  origin: function(origin, callback){
-    // allow requests with no origin 
-    // (like mobile apps or curl requests)
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) === -1){
-      var msg = 'The CORS policy for this site does not ' +
-                'allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  }
-}));
+
+const corsOptions = {
+  origin: 'http://localhost:4200'
+};
+                      
+// Enable CORS for localhost:4200
+app.use(cors(
+  corsOptions
+));
 app.use(express.json());
 
 app.use("/api", productRoutes);

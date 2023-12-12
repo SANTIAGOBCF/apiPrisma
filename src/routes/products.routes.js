@@ -25,6 +25,12 @@ router.post("/products", async (req, res) => {
 
 
 router.delete("/products/:id", async (req, res) => {
+
+	const orderItemsToDelete=await prisma.orderItem.deleteMany({
+		where:{
+			productId:Number(req.params.id)
+		}
+   });
 	const product = await prisma.product.delete({
 		where: {
 			id: Number(req.params.id),
@@ -33,21 +39,37 @@ router.delete("/products/:id", async (req, res) => {
 	res.json({"deleted":req.params.id});
 });
 
-router.patch("/products/:id", async (req, res) => {
+router.get("/products/:id", async (req, res) => {
 	try {
-		const product = await prisma.product.update({
+		const product = await prisma.product.findUnique({
 			where: {
 				id: Number(req.params.id),
-			},
-			data: req.body,
-			include: {
-				category: true,
-			},
+			}
 		});
 		res.json(product);
 	} catch (error) {
 		res.json(error);
 	}
+});
+
+router.put("/products/:id", async (req, res) => {
+	
+		
+	try {
+		const product = await prisma.product.update({
+			where: {
+				id: Number(req.params.id),
+			},
+			data:{
+				name:req.body.name,
+				price:req.body.price
+			}
+		});
+		res.json(product);
+	} catch (error) {
+		res.json({ error: error	})
+	}
+	
 });
 
 
