@@ -7,7 +7,7 @@ const app = express();
 
 
 const corsOptions = {
-  origin: ['http://localhost:4200']
+  origin: ['http://localhost:4200','https://frac-angu.vercel.app/']
 };
                       
 // Enable CORS for localhost:4200
