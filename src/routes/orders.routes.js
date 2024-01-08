@@ -137,6 +137,146 @@ router.delete("/orders/:id",async (req,res)=>{
 
 });
 
+router.get("/orders/:id", async (req, res) => {
+	try {
+	  const orderId = Number(req.params.id);
+	  const order = await prisma.order.findUnique({
+		where: {
+		  id: orderId
+		},
+		include: {
+		  OrderItem: {
+			include: {
+			  Product: true,
+			},
+		  },
+		},
+	  });
+  
+	  if (!order) {
+		return res.status(404).json({ error: "Order not found" });
+	  }
+	    
+	  res.json(order);
+	  
+	} catch (error) {
+	  res.status(500).json({ error: error.message });
+	}
+  });
 
+router.put("/orders/:id", async (req, res) => {
+	try {
+		const orderId = Number(req.params.id);
+		const { status, name } = req.body;
+
+		// Update the order in the database
+		const updatedOrder = await prisma.order.update({
+		where: {
+			id: orderId
+		},
+		data: {
+			status,
+			name
+		},
+		include: {
+			OrderItem: {
+			include: {
+				Product: true
+			}
+			}
+		}
+		});
+
+		res.json(updatedOrder);
+	} catch (error) {
+		res.status(500).json({ error: error.message });
+	}
+});
+
+router.delete("/orderItem/:orderId/:productId", async (req, res) => {
+	try {
+	  const orderId = Number(req.params.orderId);
+	  const productId = Number(req.params.productId);
+  
+	  // Delete the specific order item
+	  const deletedOrderItem = await prisma.orderItem.deleteMany({
+		where: {
+		  AND: [
+			{ orderId: orderId },
+			{ productId: productId }
+		  ]
+		}
+	  });
+  
+	  if (deletedOrderItem.count === 0) {
+		return res.status(404).json({ error: "OrderItem not found" });
+	  }
+  
+	  res.json({ message: "OrderItem deleted successfully" });
+	} catch (error) {
+	  res.status(500).json({ error: error.message });
+	}
+  });
+
+router.put("/orderItem/:orderId/:productId", async (req, res) => {
+	try {
+	  const orderId = Number(req.params.orderId);
+	  const productId = Number(req.params.productId);
+  
+	  const orderItem = await prisma.orderItem.findFirst({
+		where: {
+		  orderId: orderId,
+		  productId: productId
+		}
+	  });
+	  
+	  if (!orderItem) {
+		return res.status(404).json({ error: "OrderItem not found" });
+	  }
+  
+	  orderItem.quantity = Number(req.body.quantity);
+  
+	  const updatedOrderItem = await prisma.orderItem.update({
+		where: {
+		  id: orderItem.id
+		},
+		data: {
+		  quantity: orderItem.quantity
+		}
+	  });
+  
+	  res.json({ message: "OrderItem updated successfully", orderItem: updatedOrderItem });
+	} catch (error) {
+	  res.status(500).json({ error: error.message });
+	}
+});
+
+//Create OrderItem with orderId and productId as req.body
+router.post("/orderItem/", async (req, res) => {
+	try {
+		
+	  const { orderId, productId, quantity } = req.body;  
+	  
+	  const createdOrderItem = await prisma.orderItem.create({
+		data: {
+		  quantity: quantity,
+		  Order: {
+			connect: {
+			  id: orderId 
+			}
+		  },
+		  Product: {
+			connect: {
+			  id: productId 
+			}
+		  }
+		}
+	  });
+  
+	  res.json({ message: "OrderItem created successfully", orderItem: createdOrderItem });
+	} catch (error) {
+	  res.status(500).json({ error: error.message });
+	}
+  });
 
 export default router;
